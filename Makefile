@@ -1,6 +1,6 @@
 all: build
 
-BPF_TARGETS := xdp_amqp_collect xdp_drop xdp_pass xdp_drop_tcp
+BPF_TARGETS := xdp_amqp_collect xdp_count_drop_tcp xdp_drop xdp_pass xdp_drop_tcp
 BPF_OBJECTS := $(addprefix bpfgo/bpf/,$(addsuffix .o,$(BPF_TARGETS)))
 BPF_SOURCES := $(addprefix bpfgo/bpf/,$(addsuffix .c,$(BPF_TARGETS)))
 
