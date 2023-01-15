@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  server:
+    image: server:latest
+    build:
+      context: .
+      target: server
+    ports:
+      - 8080:8080
+      - 8081:8081/udp
+    volumes:
+      - ./bpfgo/bpf:/bpf
+    privileged: true
+
+  rabbit:
+    image: rabbit:latest
+    build:
+      context: .
+      target: rabbit
+    ports:
+      - 5672:5672
+      - 15672:15672
+    privileged: true
