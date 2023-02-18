@@ -2,14 +2,23 @@ package bpfgo
 
 import (
 	"encoding/binary"
+	"errors"
+	"fmt"
 	"log"
 	"net"
 
+	"github.com/cilium/ebpf"
 	"github.com/cilium/ebpf/link"
 	"github.com/spf13/cobra"
 )
 
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go -cc clang -cflags "-O2 -Wall" xdpAmqpCollect bpf/xdp_amqp_collect.c
+
+type amqpFrameHeader struct {
+	Type    uint8
+	Channel uint16
+	Size    uint32
+}
 
 func attachXdpAmqpCollect(cmd *cobra.Command, args []string) {
 	ifaceName := args[0]
@@ -22,7 +31,13 @@ func attachXdpAmqpCollect(cmd *cobra.Command, args []string) {
 	// Load pre-compiled programs into the kernel.
 	objs := xdpAmqpCollectObjects{}
 	if err := loadXdpAmqpCollectObjects(&objs, nil); err != nil {
-		log.Fatalf("loading objects: %s", err)
+		var ve *ebpf.VerifierError
+		if errors.As(err, &ve) {
+			for _, l := range ve.Log {
+				fmt.Println(l)
+			}
+		}
+		log.Fatalf("could not load XDP program: %s", err)
 	}
 	defer objs.Close()
 
@@ -50,17 +65,17 @@ func attachXdpAmqpCollect(cmd *cobra.Command, args []string) {
 	iter := objs.xdpAmqpCollectMaps.AmqpFramesMap.Iterate()
 	for i := uint32(0); i < packetCount; i++ {
 		var (
-			key      uint32
-			val      []byte
-			classID  uint16
-			methodID uint16
+			key    uint32
+			val    []byte
+			header amqpFrameHeader
 		)
 
 		if iter.Next(&key, &val) {
-			classID = binary.BigEndian.Uint16(val[0:2])
-			methodID = binary.BigEndian.Uint16(val[2:4])
+			header.Type = uint8(val[0])
+			header.Channel = binary.BigEndian.Uint16(val[1:3])
+			header.Size = binary.BigEndian.Uint32(val[3:7])
 
-			log.Printf("classID: %d, methodID: %d", classID, methodID)
+			log.Printf("packet %d: type=%d, channel=%d, size=%d\n", i, header.Type, header.Channel, header.Size)
 		}
 	}
 

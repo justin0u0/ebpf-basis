@@ -13,6 +13,12 @@ import (
 	"github.com/cilium/ebpf"
 )
 
+type xdpAmqpCollectAmqpFrameHeader struct {
+	Type    uint8
+	Channel uint16
+	Size    uint32
+}
+
 // loadXdpAmqpCollect returns the embedded CollectionSpec for xdpAmqpCollect.
 func loadXdpAmqpCollect() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_XdpAmqpCollectBytes)
