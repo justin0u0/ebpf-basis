@@ -37,7 +37,7 @@ func attachXdpDropTcp(cmd *cobra.Command, args []string) {
 	}
 	defer l.Close()
 
-	log.Printf("Attached XDP program to iface %q (index %d)", iface.Name, iface.Index)
+	log.Printf("attached XDP program to iface %q (index %d)", iface.Name, iface.Index)
 
 	ctx := cmd.Context()
 	<-ctx.Done()

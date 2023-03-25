@@ -2,25 +2,15 @@ package server
 
 import (
 	"bufio"
-	"context"
-	"io"
 	"log"
 	"net"
 )
 
-func tcpServer(ctx context.Context, lis net.Listener) {
+func tcpServer(lis net.Listener, echoEnabled bool) {
 	for {
-		select {
-		case <-ctx.Done():
-			log.Println("shutting down TCP server")
-			return
-		default:
-		}
-
 		conn, err := lis.Accept()
 		if err != nil {
-			log.Printf("failed to accept: %v\n", err)
-			continue
+			return
 		}
 
 		go func() {
@@ -28,17 +18,19 @@ func tcpServer(ctx context.Context, lis net.Listener) {
 
 			scanner := bufio.NewScanner(conn)
 			for scanner.Scan() {
-				select {
-				case <-ctx.Done():
-					return
-				default:
-				}
-
 				ln := scanner.Bytes()
 				log.Printf("received %d bytes %q from TCP %s\n", len(ln), ln, conn.RemoteAddr())
 
-				if _, err := io.WriteString(conn, "Reply from TCP server\n"); err != nil {
+				if !echoEnabled {
+					continue
+				}
+
+				ln = append(ln, '\n')
+				echo := append([]byte("ECHO: "), ln...)
+
+				if _, err := conn.Write(echo); err != nil {
 					log.Printf("failed to write to connection: %v\n", err)
+					continue
 				}
 			}
 

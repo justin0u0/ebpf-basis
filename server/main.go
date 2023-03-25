@@ -3,31 +3,66 @@ package server
 import (
 	"log"
 	"net"
+	"sync"
 
 	"github.com/spf13/cobra"
 )
 
-func Run(cmd *cobra.Command, args []string) {
-	tcpLis, err := net.Listen("tcp", ":8080")
-	if err != nil {
-		log.Fatalf("failed to listen to TCP on port 8080: %v", err)
+var (
+	tcpPort     = ":8080"
+	udpPort     = ":8081"
+	echoEnabled = false
+)
+
+func Command() *cobra.Command {
+	cmd := &cobra.Command{
+		Use: "server",
+		Run: run,
 	}
-	defer tcpLis.Close()
 
-	log.Println("listening TCP on :8080")
+	cmd.Flags().StringVarP(&tcpPort, "tcp", "t", tcpPort, "TCP port to listen on")
+	cmd.Flags().StringVarP(&udpPort, "udp", "u", udpPort, "UDP port to listen on")
+	cmd.Flags().BoolVarP(&echoEnabled, "echo", "e", echoEnabled, "enable echo server")
 
-	udpLis, err := net.ListenPacket("udp", ":8081")
-	if err != nil {
-		log.Fatalf("failed to listen to UDP on port 8081: %v", err)
-	}
-	defer udpLis.Close()
+	return cmd
+}
 
-	log.Println("listening UDP on :8081")
-
+func run(cmd *cobra.Command, args []string) {
 	ctx := cmd.Context()
 
-	go tcpServer(ctx, tcpLis)
-	go udpServer(ctx, udpLis)
+	tcpLis, err := net.Listen("tcp", tcpPort)
+	if err != nil {
+		log.Fatalf("failed to listen to TCP on port %s: %v", tcpPort, err)
+	}
+	log.Println("listening TCP on", tcpPort)
+
+	udpLis, err := net.ListenPacket("udp", udpPort)
+	if err != nil {
+		log.Fatalf("failed to listen to UDP on port %s: %v", udpPort, err)
+	}
+	log.Println("listening UDP on", udpPort)
+
+	var wg sync.WaitGroup
+	wg.Add(2)
+	go func() {
+		tcpServer(tcpLis, echoEnabled)
+		wg.Done()
+	}()
+	go func() {
+		udpServer(udpLis, echoEnabled)
+		wg.Done()
+	}()
 
 	<-ctx.Done()
+
+	log.Println("shutting down...")
+
+	if err := tcpLis.Close(); err != nil {
+		log.Printf("failed to close TCP listener: %v\n", err)
+	}
+	if err := udpLis.Close(); err != nil {
+		log.Printf("failed to close UDP listener: %v\n", err)
+	}
+
+	wg.Wait()
 }

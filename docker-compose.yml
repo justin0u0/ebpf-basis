@@ -3,18 +3,17 @@ version: '3.8'
 services:
   server:
     image: server:latest
+    container_name: server
     build:
       context: .
       target: server
-    ports:
-      - 8080:8080
-      - 8081:8081/udp
     volumes:
       - ./bpfgo/bpf:/bpf
     privileged: true
 
   rabbit:
     image: rabbit:latest
+    container_name: rabbit
     build:
       context: .
       target: rabbit
@@ -22,3 +21,30 @@ services:
       - 5672:5672
       - 15672:15672
     privileged: true
+
+  postgres:
+    image: postgres-ebpf:latest
+    container_name: postgres
+    build:
+      context: .
+      target: postgres-ebpf
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    privileged: true
+
+  pgbouncer:
+    image: pgbouncer-ebpf:latest
+    container_name: pgbouncer
+    build:
+      context: .
+      target: pgbouncer-ebpf
+    environment:
+      POSTGRESQL_HOST: postgres
+      POSTGRESQL_PASSWORD: postgres
+      PGBOUNCER_MIN_POOL_SIZE: 5
+      PGBOUNCER_STATS_USERS: postgres
+    privileged: true
+    ports:
+      - 6432:6432
+    volumes:
+      - ./pgbouncer:/bitnami/pgbouncer/conf/

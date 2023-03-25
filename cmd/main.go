@@ -8,6 +8,7 @@ import (
 	"github.com/justin0u0/ebpf-basis/bpfgo"
 	"github.com/justin0u0/ebpf-basis/client"
 	"github.com/justin0u0/ebpf-basis/server"
+	"github.com/justin0u0/ebpf-basis/server/tcpserver"
 	"github.com/spf13/cobra"
 )
 
@@ -15,10 +16,8 @@ func main() {
 	cmd := &cobra.Command{}
 
 	cmd.AddCommand(
-		&cobra.Command{
-			Use: "server",
-			Run: server.Run,
-		},
+		server.Command(),
+		tcpserver.Command(),
 		bpfgo.Command(),
 		client.Command(),
 	)

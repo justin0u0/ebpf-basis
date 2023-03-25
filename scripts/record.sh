@@ -8,5 +8,5 @@ if [ -z "$ifaceName" ]; then
 fi
 
 tshark -i $ifaceName -w /tmp/$ifaceName.pcap
-mv /tmp/$ifaceName.pcap ~/out.pcapng
-chmod 644 ~/out.pcapng
+mv /tmp/$ifaceName.pcap /home/justin/out.pcapng
+chmod 644 /home/justin/out.pcapng

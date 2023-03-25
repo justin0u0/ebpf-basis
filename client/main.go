@@ -16,6 +16,7 @@ func Command() *cobra.Command {
 			Use: "amqp-consume",
 			Run: runAmqpConsume,
 		},
+		runPostgresCommand(),
 	)
 
 	return cmd
