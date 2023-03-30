@@ -6,6 +6,7 @@ func Command() *cobra.Command {
 	cmd := &cobra.Command{Use: "bpfgo"}
 
 	cmd.AddCommand(
+		loadSkRedirectCmd(),
 		&cobra.Command{
 			Use:  "xdp-amqp-collect [iface]",
 			Run:  attachXdpAmqpCollect,

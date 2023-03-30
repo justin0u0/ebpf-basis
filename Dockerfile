@@ -26,7 +26,6 @@ COPY bin/cmd /
 FROM bitnami/pgbouncer:1.18.0 AS pgbouncer-ebpf
 
 USER root
-RUN apt-get update && apt-get install -y iproute2
-USER 1001
+RUN apt-get update && apt-get install -y iproute2 lsof
 
 COPY bin/cmd /

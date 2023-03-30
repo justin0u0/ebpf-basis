@@ -3,7 +3,7 @@ module github.com/justin0u0/ebpf-basis
 go 1.19
 
 require (
-	github.com/cilium/ebpf v0.9.3
+	github.com/cilium/ebpf v0.10.0
 	github.com/jackc/pgx/v5 v5.3.1
 	github.com/rabbitmq/amqp091-go v1.5.0
 	github.com/spf13/cobra v1.6.1
